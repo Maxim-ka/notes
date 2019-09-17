@@ -6,20 +6,25 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.reschikov.geekbrains.notes.R
 import com.reschikov.geekbrains.notes.repository.model.Note
-import com.reschikov.geekbrains.notes.usecase.DisplayedNotes
 import kotlinx.android.synthetic.main.item_note.view.*
 
-class ListNotesAdapter (private val displayedNotes : DisplayedNotes): RecyclerView.Adapter<ListNotesAdapter.ViewHolder>() {
+class ListNotesAdapter : RecyclerView.Adapter<ListNotesAdapter.ViewHolder>() {
+
+    var notes = mutableListOf<Note>()
+        set(value){
+            field = value
+            notifyDataSetChanged()
+        }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_note, parent, false)
         return ViewHolder(view)
     }
 
-    override fun getItemCount(): Int = displayedNotes.getNumberOfNotes()
+    override fun getItemCount() = notes.size
 
     override fun onBindViewHolder(holder : ViewHolder, position : Int) {
-        displayedNotes.bindNoteWithView(holder, position)
+        holder.show(notes[position])
     }
 
     class ViewHolder(private val view : View): RecyclerView.ViewHolder(view), DisplayedNote{
