@@ -4,15 +4,11 @@ import android.os.Parcel
 import android.os.Parcelable
 import java.util.*
 
-data class Note(var id: Int,
+data class Note(val id: Int = ++countId,
                 val title: String?,
-                val note: String?,
-                var color: ColorNote,
+                val note: String? = "Kotlin очень краткий, но при этом выразительный язык",
+                var color: ColorNote = ColorNote.WHITE,
                 val lastModification: Long = Date().time) : Parcelable {
-
-    init {
-        if (id == 0) id = ++countId
-    }
 
     companion object CREATOR : Parcelable.Creator<Note> {
 
@@ -40,7 +36,7 @@ data class Note(var id: Int,
             parcel.readInt(),
             parcel.readString(),
             parcel.readString(),
-            ColorNote.valueOf(parcel.readString() ?: ColorNote.WHITE.toString()),
+            ColorNote.valueOf(parcel.readString()),
             parcel.readLong()
     )
 

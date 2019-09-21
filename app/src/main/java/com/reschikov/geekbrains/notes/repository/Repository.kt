@@ -5,27 +5,13 @@ import com.reschikov.geekbrains.notes.repository.model.Note
 
 object Repository {
 
-    private var notes = mutableListOf(Note(0,"Моя первая заметка" ,
-            "Kotlin очень краткий, но при этом выразительный язык" ,
-            ColorNote.WHITE),
-            Note(0,"Моя вторая заметка" ,
-                    "Kotlin очень краткий, но при этом выразительный язык" ,
-                    ColorNote.YELLOW),
-            Note(0,"Моя третья заметка" ,
-                    "Kotlin очень краткий, но при этом выразительный язык" ,
-                    ColorNote.GREEN),
-            Note(0,"Моя четвертая заметка" ,
-                    "Kotlin очень краткий, но при этом выразительный язык" ,
-                    ColorNote.BLUE),
-            Note(0,"Моя пятая заметка" ,
-                    "Kotlin очень краткий, но при этом выразительный язык" ,
-                    ColorNote.PINK),
-            Note(0,"Моя шестая заметка" ,
-                    "Kotlin очень краткий, но при этом выразительный язык" ,
-                    ColorNote.RED),
-            Note(0,"Моя седьмая заметка" ,
-                    "Kotlin очень краткий, но при этом выразительный язык" ,
-                    ColorNote.VIOLET))
+    private var notes = mutableListOf(Note(title = "Моя первая заметка"),
+            Note(title = "Моя вторая заметка", color = ColorNote.YELLOW),
+            Note(title = "Моя третья заметка", color = ColorNote.GREEN),
+            Note(title = "Моя четвертая заметка", color = ColorNote.BLUE),
+            Note(title = "Моя пятая заметка", color = ColorNote.PINK),
+            Note(title = "Моя шестая заметка", color = ColorNote.RED),
+            Note(title = "Моя седьмая заметка", color = ColorNote.VIOLET))
 
     fun getListNotes() = notes
 

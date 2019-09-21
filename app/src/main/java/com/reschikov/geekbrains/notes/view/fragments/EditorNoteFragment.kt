@@ -55,7 +55,7 @@ class EditorNoteFragment: Fragment(R.layout.note_fragment) {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 Handler().postDelayed({
                     note = note?.copy(title = tie_title?.text.toString(), lastModification = Date().time) ?:
-                            Note(0,tie_title?.text.toString(), null, ColorNote.WHITE)
+                            Note(title = tie_title?.text.toString(), note = null, color = ColorNote.WHITE)
                     noteViewModel.saveChanges(note!!)
                 }, SAVE_DELAY)
             }
@@ -72,7 +72,7 @@ class EditorNoteFragment: Fragment(R.layout.note_fragment) {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 Handler().postDelayed({
                     note = note?.copy(note = tie_text?.text.toString(), lastModification = Date().time) ?:
-                            Note(0,null, tie_text?.text.toString(), ColorNote.WHITE)
+                            Note(title = null, note = tie_text?.text.toString(), color = ColorNote.WHITE)
                     noteViewModel.saveChanges(note!!)
                 }, SAVE_DELAY)
             }
