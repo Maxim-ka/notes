@@ -1,30 +1,45 @@
 package com.reschikov.geekbrains.notes.repository
 
+import com.reschikov.geekbrains.notes.repository.model.ColorNote
 import com.reschikov.geekbrains.notes.repository.model.Note
 
-class Repository {
+object Repository {
 
-    fun createListNotes(): MutableList<Note>{
-        return mutableListOf(Note( "Моя первая заметка" ,
-                "Kotlin очень краткий, но при этом выразительный язык" ,
-                0xfff06292 .toInt()),
-                Note( "Моя вторая заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xff9575cd .toInt()),
-                Note( "Моя третья заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xff64b5f6 .toInt()),
-                Note( "Моя четвертая заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xff4db6ac .toInt()),
-                Note( "Моя пятая заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xffb2ff59 .toInt()),
-                Note( "Моя шестая заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xffffeb3b .toInt()),
-                Note( "Моя седьмая заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xffff6e40 .toInt()))
+    private var notes = mutableListOf(Note(0,"Моя первая заметка" ,
+            "Kotlin очень краткий, но при этом выразительный язык" ,
+            ColorNote.WHITE),
+            Note(0,"Моя вторая заметка" ,
+                    "Kotlin очень краткий, но при этом выразительный язык" ,
+                    ColorNote.YELLOW),
+            Note(0,"Моя третья заметка" ,
+                    "Kotlin очень краткий, но при этом выразительный язык" ,
+                    ColorNote.GREEN),
+            Note(0,"Моя четвертая заметка" ,
+                    "Kotlin очень краткий, но при этом выразительный язык" ,
+                    ColorNote.BLUE),
+            Note(0,"Моя пятая заметка" ,
+                    "Kotlin очень краткий, но при этом выразительный язык" ,
+                    ColorNote.PINK),
+            Note(0,"Моя шестая заметка" ,
+                    "Kotlin очень краткий, но при этом выразительный язык" ,
+                    ColorNote.RED),
+            Note(0,"Моя седьмая заметка" ,
+                    "Kotlin очень краткий, но при этом выразительный язык" ,
+                    ColorNote.VIOLET))
+
+    fun getListNotes() = notes
+
+    fun saveNote (note: Note ) {
+        addOrReplace(note)
+    }
+
+    private fun addOrReplace (note: Note ) {
+        for (i in 0 until notes.size) {
+            if (notes[i] == note) {
+                notes[i] = note
+                return
+            }
+        }
+        notes.add(note)
     }
 }
