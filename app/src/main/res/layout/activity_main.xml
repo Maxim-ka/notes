@@ -31,13 +31,13 @@
     </com.google.android.material.bottomappbar.BottomAppBar>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/fb_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:focusable="true"
         android:focusableInTouchMode="false"
-        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
+        app:layout_behavior=".view.utilities.BehaviorFABAndBottomAppBar"
         app:layout_anchor="@id/bottomAppBar"
         app:layout_anchorGravity="end"
         app:backgroundTint="?attr/colorAccent"

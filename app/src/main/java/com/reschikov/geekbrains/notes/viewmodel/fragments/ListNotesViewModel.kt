@@ -6,12 +6,12 @@ import androidx.lifecycle.ViewModel
 import com.reschikov.geekbrains.notes.repository.Repository
 import com.reschikov.geekbrains.notes.usecase.StateListNote
 
-class ListNotesViewModel: ViewModel() {
+class ListNotesViewModel(repository: Repository = Repository): ViewModel() {
 
     private val mutableLiveData = MutableLiveData<StateListNote>()
 
     init {
-        mutableLiveData.value = StateListNote(Repository().createListNotes())
+        mutableLiveData.value = StateListNote(repository.getListNotes())
     }
 
     fun getViewStateListNote() : LiveData<StateListNote> {

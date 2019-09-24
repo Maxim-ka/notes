@@ -1,24 +1,37 @@
 package com.reschikov.geekbrains.notes.view.fragments.adapters
 
+import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.reschikov.geekbrains.notes.R
+import com.reschikov.geekbrains.notes.getDateTime
+import com.reschikov.geekbrains.notes.getResourceColor
 import com.reschikov.geekbrains.notes.repository.model.Note
+import com.reschikov.geekbrains.notes.view.activities.OnItemClickListener
 import kotlinx.android.synthetic.main.item_note.view.*
+import java.util.*
 
-class ListNotesAdapter : RecyclerView.Adapter<ListNotesAdapter.ViewHolder>() {
+private const val HALF = 0.5f
+
+class ListNotesAdapter(private val onItemClickListener: OnItemClickListener) : RecyclerView.Adapter<ListNotesAdapter.ViewHolder>() {
 
     var notes = mutableListOf<Note>()
         set(value){
+            val diffUtilCallback = NotesDiffUtilCallback(notes, value)
+            DiffUtil.calculateDiff(diffUtilCallback, false).dispatchUpdatesTo(this)
             field = value
-            notifyDataSetChanged()
         }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_note, parent, false)
-        return ViewHolder(view)
+        val metricsB = DisplayMetrics()
+        parent.display.getMetrics(metricsB)
+        view.layoutParams.height = (metricsB.widthPixels / metricsB.density * HALF).toInt()
+        return ViewHolder(view, onItemClickListener)
     }
 
     override fun getItemCount() = notes.size
@@ -27,13 +40,16 @@ class ListNotesAdapter : RecyclerView.Adapter<ListNotesAdapter.ViewHolder>() {
         holder.show(notes[position])
     }
 
-    class ViewHolder(private val view : View): RecyclerView.ViewHolder(view), DisplayedNote{
+    class ViewHolder(private val view : View, private val onItemClickListener: OnItemClickListener): RecyclerView.ViewHolder(view),
+            DisplayedNote{
 
-        override fun show(note : Note) = view.run{
+        override fun show(note: Note) = view.run{
+            setOnClickListener {onItemClickListener.onItemClick(note)}
             with(note){
                 tv_title.text = title
                 tv_text.text = this.note
-                cv_card.setBackgroundColor(color)
+                tv_time.text = getDateTime(Date(lastModification))
+                cv_card.setBackgroundColor(ContextCompat.getColor(view.context, getResourceColor(color)))
             }
         }
     }

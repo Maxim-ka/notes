@@ -1,30 +1,31 @@
 package com.reschikov.geekbrains.notes.repository
 
+import com.reschikov.geekbrains.notes.repository.model.ColorNote
 import com.reschikov.geekbrains.notes.repository.model.Note
 
-class Repository {
+object Repository {
 
-    fun createListNotes(): MutableList<Note>{
-        return mutableListOf(Note( "Моя первая заметка" ,
-                "Kotlin очень краткий, но при этом выразительный язык" ,
-                0xfff06292 .toInt()),
-                Note( "Моя вторая заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xff9575cd .toInt()),
-                Note( "Моя третья заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xff64b5f6 .toInt()),
-                Note( "Моя четвертая заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xff4db6ac .toInt()),
-                Note( "Моя пятая заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xffb2ff59 .toInt()),
-                Note( "Моя шестая заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xffffeb3b .toInt()),
-                Note( "Моя седьмая заметка" ,
-                        "Kotlin очень краткий, но при этом выразительный язык" ,
-                        0xffff6e40 .toInt()))
+    private var notes = mutableListOf(Note(title = "Моя первая заметка"),
+            Note(title = "Моя вторая заметка", color = ColorNote.YELLOW),
+            Note(title = "Моя третья заметка", color = ColorNote.GREEN),
+            Note(title = "Моя четвертая заметка", color = ColorNote.BLUE),
+            Note(title = "Моя пятая заметка", color = ColorNote.PINK),
+            Note(title = "Моя шестая заметка", color = ColorNote.RED),
+            Note(title = "Моя седьмая заметка", color = ColorNote.VIOLET))
+
+    fun getListNotes() = notes
+
+    fun saveNote (note: Note ) {
+        addOrReplace(note)
+    }
+
+    private fun addOrReplace (note: Note ) {
+        for (i in 0 until notes.size) {
+            if (notes[i] == note) {
+                notes[i] = note
+                return
+            }
+        }
+        notes.add(note)
     }
 }
