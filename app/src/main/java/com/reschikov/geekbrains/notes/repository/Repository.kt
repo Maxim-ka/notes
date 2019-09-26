@@ -1,31 +1,15 @@
 package com.reschikov.geekbrains.notes.repository
 
-import com.reschikov.geekbrains.notes.repository.model.ColorNote
 import com.reschikov.geekbrains.notes.repository.model.Note
+import com.reschikov.geekbrains.notes.repository.provider.FireStoreProvider
+import com.reschikov.geekbrains.notes.repository.provider.RemoteDataProvider
 
 object Repository {
 
-    private var notes = mutableListOf(Note(title = "Моя первая заметка"),
-            Note(title = "Моя вторая заметка", color = ColorNote.YELLOW),
-            Note(title = "Моя третья заметка", color = ColorNote.GREEN),
-            Note(title = "Моя четвертая заметка", color = ColorNote.BLUE),
-            Note(title = "Моя пятая заметка", color = ColorNote.PINK),
-            Note(title = "Моя шестая заметка", color = ColorNote.RED),
-            Note(title = "Моя седьмая заметка", color = ColorNote.VIOLET))
+    private val remoteProvider: RemoteDataProvider = FireStoreProvider()
 
-    fun getListNotes() = notes
-
-    fun saveNote (note: Note ) {
-        addOrReplace(note)
-    }
-
-    private fun addOrReplace (note: Note ) {
-        for (i in 0 until notes.size) {
-            if (notes[i] == note) {
-                notes[i] = note
-                return
-            }
-        }
-        notes.add(note)
-    }
+    fun getNotes() = remoteProvider.subscribeToAllNotes()
+    fun saveNote(note: Note) = remoteProvider.saveChangesNote(note)
+    fun getNoteById(id: String) = remoteProvider.getNoteById(id)
+    fun addNewNote(note: Note) = remoteProvider.addNewNotes(note)
 }

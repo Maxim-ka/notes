@@ -22,8 +22,10 @@ class ListNotesAdapter(private val onItemClickListener: OnItemClickListener) : R
     var notes = mutableListOf<Note>()
         set(value){
             val diffUtilCallback = NotesDiffUtilCallback(notes, value)
-            DiffUtil.calculateDiff(diffUtilCallback, false).dispatchUpdatesTo(this)
+            val result = DiffUtil.calculateDiff(diffUtilCallback, false)
             field = value
+            result.dispatchUpdatesTo(this)
+//            notifyDataSetChanged()
         }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -44,7 +46,7 @@ class ListNotesAdapter(private val onItemClickListener: OnItemClickListener) : R
             DisplayedNote{
 
         override fun show(note: Note) = view.run{
-            setOnClickListener {onItemClickListener.onItemClick(note)}
+            setOnClickListener {onItemClickListener.onItemClick(note.id!!)}
             with(note){
                 tv_title.text = title
                 tv_text.text = this.note
