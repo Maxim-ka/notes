@@ -2,17 +2,16 @@ package com.reschikov.geekbrains.notes.repository.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.google.firebase.firestore.DocumentId
 import java.util.*
 
-data class Note(val id: Int = ++countId,
-                val title: String?,
-                val note: String? = "Kotlin очень краткий, но при этом выразительный язык",
+data class Note(@DocumentId val id: String? = null,
+                val title: String? = null,
+                val note: String? = null,
                 var color: ColorNote = ColorNote.WHITE,
                 val lastModification: Long = Date().time) : Parcelable {
 
     companion object CREATOR : Parcelable.Creator<Note> {
-
-        var countId = 0
 
         override fun createFromParcel(parcel: Parcel): Note {
             return Note(parcel)
@@ -33,15 +32,15 @@ data class Note(val id: Int = ++countId,
     override fun hashCode() = id.hashCode()
 
     constructor(parcel: Parcel) : this(
-            parcel.readInt(),
             parcel.readString(),
             parcel.readString(),
-            ColorNote.valueOf(parcel.readString()),
+            parcel.readString(),
+            ColorNote.valueOf(parcel.readString()!!),
             parcel.readLong()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(id)
+        parcel.writeString(id)
         parcel.writeString(title)
         parcel.writeString(note)
         parcel.writeString(color.toString())
@@ -63,7 +62,7 @@ enum class ColorNote() : Parcelable{
     PINK;
 
     constructor(parcel: Parcel) : this() {
-       valueOf(parcel.readString() ?: WHITE.toString())
+       valueOf(parcel.readString()!!)
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -84,7 +83,7 @@ enum class ColorNote() : Parcelable{
 
     companion object CREATOR : Parcelable.Creator<ColorNote> {
         override fun createFromParcel(parcel: Parcel): ColorNote {
-            return valueOf(parcel.readString() ?: WHITE.toString())
+            return valueOf(parcel.readString()!!)
         }
 
         override fun newArray(size: Int): Array<ColorNote?> {

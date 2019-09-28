@@ -21,8 +21,14 @@ class ListNotesAdapter(private val onItemClickListener: OnItemClickListener) : R
 
     var notes = mutableListOf<Note>()
         set(value){
-            val diffUtilCallback = NotesDiffUtilCallback(notes, value)
-            DiffUtil.calculateDiff(diffUtilCallback, false).dispatchUpdatesTo(this)
+            //FixMe разобраться почему при пустом notes не запускается NotesDiffUtilCallback
+            if (notes.isEmpty()){
+                notifyDataSetChanged()
+            } else {
+                NotesDiffUtilCallback(notes, value).also {
+                    DiffUtil.calculateDiff(it).dispatchUpdatesTo(this)
+                }
+            }
             field = value
         }
 
@@ -44,7 +50,7 @@ class ListNotesAdapter(private val onItemClickListener: OnItemClickListener) : R
             DisplayedNote{
 
         override fun show(note: Note) = view.run{
-            setOnClickListener {onItemClickListener.onItemClick(note)}
+            setOnClickListener {onItemClickListener.onItemClick(note.id!!)}
             with(note){
                 tv_title.text = title
                 tv_text.text = this.note

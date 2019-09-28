@@ -7,8 +7,8 @@ import android.os.Bundle
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import com.reschikov.geekbrains.notes.R
-import com.reschikov.geekbrains.notes.repository.model.Note
 import com.reschikov.geekbrains.notes.view.fragments.EditorNoteFragment
 import com.reschikov.geekbrains.notes.view.fragments.ListNotesFragment
 import kotlinx.android.synthetic.main.activity_main.*
@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 private const val TAG_LIST_NOTES = "tag list notes"
 private const val TAG_NOTE = "tag note"
 
-class MainActivity : AppCompatActivity(), OnItemClickListener {
+class MainActivity : AppCompatActivity(), OnItemClickListener, DisplayedMessage {
 
     private lateinit var plus : Drawable
     private lateinit var done : Drawable
@@ -28,9 +28,7 @@ class MainActivity : AppCompatActivity(), OnItemClickListener {
         setSupportActionBar(bottomAppBar)
         initFab()
 
-        if (savedInstanceState == null){
-            loadFragment(ListNotesFragment(), TAG_LIST_NOTES)
-        }
+        savedInstanceState ?: loadFragment(ListNotesFragment(), TAG_LIST_NOTES)
     }
 
     private fun initFab(){
@@ -73,8 +71,8 @@ class MainActivity : AppCompatActivity(), OnItemClickListener {
                else supportFragmentManager.fragments[supportFragmentManager.fragments.size - 1].tag
     }
 
-    override fun onItemClick(note: Note) {
-        loadFragment(EditorNoteFragment.newInstance(note), TAG_NOTE)
+    override fun onItemClick(noteId: String) {
+        loadFragment(EditorNoteFragment.newInstance(noteId), TAG_NOTE)
     }
 
     override fun onBackPressed() {
@@ -83,5 +81,11 @@ class MainActivity : AppCompatActivity(), OnItemClickListener {
             return
         }
         super.onBackPressed()
+    }
+
+    override fun showMessage(message: String){
+        val snackbar = Snackbar.make(bottomAppBar, message, Snackbar.LENGTH_INDEFINITE)
+        snackbar.anchorView = fab
+        snackbar.show()
     }
 }
