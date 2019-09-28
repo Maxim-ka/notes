@@ -21,11 +21,15 @@ class ListNotesAdapter(private val onItemClickListener: OnItemClickListener) : R
 
     var notes = mutableListOf<Note>()
         set(value){
-            val diffUtilCallback = NotesDiffUtilCallback(notes, value)
-            val result = DiffUtil.calculateDiff(diffUtilCallback, false)
+            //FixMe разобраться почему при пустом notes не запускается NotesDiffUtilCallback
+            if (notes.isEmpty()){
+                notifyDataSetChanged()
+            } else {
+                NotesDiffUtilCallback(notes, value).also {
+                    DiffUtil.calculateDiff(it).dispatchUpdatesTo(this)
+                }
+            }
             field = value
-            result.dispatchUpdatesTo(this)
-//            notifyDataSetChanged()
         }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

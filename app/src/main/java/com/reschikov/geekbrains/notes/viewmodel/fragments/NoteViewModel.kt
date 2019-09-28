@@ -13,11 +13,13 @@ class NoteViewModel(private val repository: Repository = Repository) :
     fun loadNote (noteId: String) {
         repository.getNoteById(noteId).observeForever { noteResult ->
             noteResult?.let {
-                when (it) {
-                    is NoteResult.Success<*> ->
-                        viewStateLiveData.value = NoteViewState(note = it.data as? Note)
-                    is NoteResult.Error ->
-                        viewStateLiveData.value = NoteViewState(error = it.error)
+                with(viewStateLiveData){
+                    value = when (it) {
+                        is NoteResult.Success<*> ->
+                            NoteViewState(note = it.data as? Note)
+                        is NoteResult.Error ->
+                            NoteViewState(error = it.error)
+                    }
                 }
             }
         }

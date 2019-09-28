@@ -21,7 +21,9 @@ class ListNotesFragment : BaseFragment<MutableList<Note>?, ListNoteViewState>(R.
     }
 
     private lateinit var onItemClickListener: OnItemClickListener
-    private lateinit var  notesAdapter : ListNotesAdapter
+    private val  notesAdapter : ListNotesAdapter by lazy {
+        ListNotesAdapter(onItemClickListener)
+    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -30,7 +32,6 @@ class ListNotesFragment : BaseFragment<MutableList<Note>?, ListNoteViewState>(R.
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        notesAdapter = ListNotesAdapter(onItemClickListener)
         recycler_notes.apply {
             adapter = notesAdapter
             layoutManager = GridLayoutManager(context, SPAN_COUNT)
