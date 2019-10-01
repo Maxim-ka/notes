@@ -13,13 +13,11 @@ class NoteViewModel(private val repository: Repository = Repository) :
     fun loadNote (noteId: String) {
         repository.getNoteById(noteId).observeForever { noteResult ->
             noteResult?.let {
-                with(viewStateLiveData){
-                    value = when (it) {
-                        is NoteResult.Success<*> ->
-                            NoteViewState(note = it.data as? Note)
-                        is NoteResult.Error ->
-                            NoteViewState(error = it.error)
-                    }
+                when(it){
+                    is NoteResult.Success<*> ->
+                        viewStateLiveData.value = NoteViewState(note = it.data as? Note)
+                    is NoteResult.Error ->
+                        it.renderError(it.error)
                 }
             }
         }
@@ -32,7 +30,8 @@ class NoteViewModel(private val repository: Repository = Repository) :
     override fun onCleared () {
         pendingNote?.let {
             with(repository){
-                it.id?.run {saveNote(it) } ?: addNewNote(it)
+                it.id?.run {saveNote(it) } ?:
+                it.takeUnless {it.title == null && it.note == null }?.let {addNewNote(it)}
             }
         }
     }
