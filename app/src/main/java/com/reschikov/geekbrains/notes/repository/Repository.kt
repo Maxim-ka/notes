@@ -12,4 +12,6 @@ object Repository {
     fun saveNote(note: Note) = remoteProvider.saveChangesNote(note)
     fun getNoteById(id: String) = remoteProvider.getNoteById(id)
     fun addNewNote(note: Note) = remoteProvider.addNewNotes(note)
+    fun deleteNote(note: Note) = remoteProvider.deleteNote(note)
+    fun getCurrentUser () = remoteProvider.getCurrentUser()
 }

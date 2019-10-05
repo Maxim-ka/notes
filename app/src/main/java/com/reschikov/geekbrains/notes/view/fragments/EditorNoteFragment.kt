@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
 import com.reschikov.geekbrains.notes.R
 import com.reschikov.geekbrains.notes.getResourceColor
@@ -21,7 +20,7 @@ private const val SAVE_DELAY = 2_000L
 class EditorNoteFragment: BaseFragment<Note?, NoteViewState>(R.layout.note_fragment) {
 
     companion object{
-        fun newInstance(id: String) = EditorNoteFragment()
+        fun newInstance(id: String?) = EditorNoteFragment()
             .also {
                 with(Bundle()){
                     putString(KEY_ID, id)
@@ -82,16 +81,25 @@ class EditorNoteFragment: BaseFragment<Note?, NoteViewState>(R.layout.note_fragm
     private fun initView(){
         note?.let {
             with(til_title){
-                boxBackgroundColor = ContextCompat.getColor(context, getResourceColor(it.color))
+                boxBackgroundColor = it.color.getResourceColor(this.context)
             }
             with(tie_title){
-                editableText.append(it.title)
+                it.title?.let{
+                    with(editableText){clear()
+                        append(it)
+                    }
+                }
             }
             with(til_text){
-                boxBackgroundColor = ContextCompat.getColor(context, getResourceColor(it.color))
+                boxBackgroundColor = it.color.getResourceColor(this.context)
             }
             with(tie_text){
-                editableText.append(it.note)
+                it.note?.let{
+                    with(editableText){
+                        clear()
+                        append(it)
+                    }
+                }
                 requestFocus()
             }
         }
