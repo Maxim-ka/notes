@@ -5,6 +5,33 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height = "1dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/colorPrimaryDark" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:overScrollMode="always"
+        android:scrollbars="none" >
+
+        <com.reschikov.geekbrains.notes.view.customviews.ColorPickerView
+            android:id = "@+id/colorPicker"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal"
+            android:layout_height="0dp"/>
+
+    </HorizontalScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height = "1dp"
+        android:layout_marginBottom="16dp"
+        android:background="@color/colorPrimaryDark" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_title"
         android:layout_width = "match_parent"

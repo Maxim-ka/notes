@@ -6,14 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.reschikov.geekbrains.notes.NoteApp
-import com.reschikov.geekbrains.notes.R
-import com.reschikov.geekbrains.notes.formatDateTime
-import com.reschikov.geekbrains.notes.getResourceColor
+import com.reschikov.geekbrains.notes.*
 import com.reschikov.geekbrains.notes.repository.model.Note
 import com.reschikov.geekbrains.notes.view.fragments.OnItemClickListener
+import com.reschikov.geekbrains.notes.view.navigation.RouterSupportMessage
 import com.reschikov.geekbrains.notes.view.navigation.Screens
-import kotlinx.android.synthetic.main.item_note.view.*
+import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.main.item_note.*
+import org.koin.core.KoinComponent
+import org.koin.core.inject
 import timber.log.Timber
 import kotlin.properties.Delegates
 
@@ -50,17 +51,23 @@ class ListNotesAdapter(private val onItemClickListener: OnItemClickListener) : R
         holder.show(notes[position])
     }
 
-    class ViewHolder(private val view : View, private val onItemClickListener: OnItemClickListener): RecyclerView.ViewHolder(view),
-            DisplayedNote{
+    class ViewHolder(override val containerView: View,
+                     private val onItemClickListener: OnItemClickListener):
+            RecyclerView.ViewHolder(containerView),
+            DisplayedNote,
+            LayoutContainer,
+            KoinComponent{
 
-        override fun show(note: Note) = view.run{
-            setOnClickListener {NoteApp.INSTANCE.getRouter().replaceScreen(Screens.NoteScreen(note.id))}
-            setOnLongClickListener{onItemClickListener.onItemClick(note).let { true }}
+        private val router: RouterSupportMessage by inject()
+
+        override fun show(note: Note) {
+            itemView.setOnClickListener {router.replaceScreen(Screens.NoteScreen(note.id))}
+            itemView.setOnLongClickListener{onItemClickListener.onItemClick(note).let { true }}
             with(note){
                 tv_title.text = title
                 tv_text.text = this.note
                 tv_time.text = lastModification.formatDateTime()
-                cv_card.setBackgroundColor(color.getResourceColor(this@run.context))
+                cv_card.setBackgroundColor(color.getColor(itemView.context))
             }
         }
     }
