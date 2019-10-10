@@ -69,6 +69,7 @@ class TestNoteViewModel {
         stopKoin()
     }
 
+    //FixME не прошел
     @Test
     fun `unauthorized to load Note`(){
         startKoin { modules(mockModule) }

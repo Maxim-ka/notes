@@ -3,6 +3,7 @@ package com.reschikov.geekbrains.notes.repository.provider
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.tasks.OnFailureListener
+import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
 import com.reschikov.geekbrains.notes.repository.NoAuthException

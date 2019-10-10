@@ -99,6 +99,7 @@ class TestFireStoreProvider{
         assertEquals(testNotes, result)
     }
 
+    //FIXME не прошел
     @Test
     fun `subscribeToAllNotes return error`(){
         var result: Throwable? = null
@@ -113,17 +114,48 @@ class TestFireStoreProvider{
     }
 
     @Test
-    fun `successfully saving note changes`(){
-        val slot = slot<OnSuccessListener<in Void>>()
+    fun `successfully receiving notes on id`(){
+        val slot = slot<OnSuccessListener<DocumentSnapshot>>()
         var result: Note? = null
         every {
-            mockUserDocument.set(testNotes[0]).addOnSuccessListener(capture(slot))} returns mockk()
-        provider.saveChangesNote(testNotes[0]).observeForever {
-            result = (it as NoteResult.Success<Note>).data
+            mockResultCollection
+                .document(testNotes[0].id!!)
+                .get()
+                .addOnSuccessListener(capture(slot))} returns mockk()
+        provider.getNoteById(testNotes[0].id!!).observeForever {
+            result = (it as? NoteResult.Success<Note>)?.data
         }
-        slot.captured.onSuccess(null)
+        slot.captured.onSuccess(mockDocument_1)
+
         assertNotNull(result)
         assertEquals(testNotes[0], result)
+
+        verify(exactly = 1) { mockResultCollection
+                .document(testNotes[0].id!!)
+                .get() }
+
+    }
+
+    @Test
+    fun `successfully saving note changes`(){
+        val slot = slot<OnSuccessListener<Void>>()
+        var result: Note? = null
+        every {
+            mockResultCollection
+                .document(testNotes[0].id!!)
+                .set(testNotes[0])
+                .addOnSuccessListener(capture(slot))} returns mockk()
+        provider.saveChangesNote(testNotes[0]).observeForever {
+            result = (it as? NoteResult.Success<Note>)?.data
+        }
+        slot.captured.onSuccess(null)
+
+        assertNotNull(result)
+        assertEquals(testNotes[0], result)
+
+        verify(exactly = 1) {  mockResultCollection
+                .document(testNotes[0].id!!)
+                .set(testNotes[0]) }
     }
 
 
