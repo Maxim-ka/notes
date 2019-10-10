@@ -1,42 +1,28 @@
 package com.reschikov.geekbrains.notes.repository.provider
 
-import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
-import com.reschikov.geekbrains.notes.NoteApp
 import com.reschikov.geekbrains.notes.repository.NoAuthException
 import com.reschikov.geekbrains.notes.repository.model.Note
 import com.reschikov.geekbrains.notes.repository.model.NoteResult
 import com.reschikov.geekbrains.notes.repository.model.User
-import java.util.*
+import com.reschikov.geekbrains.notes.repository.preference.Storage
 
 private const val USERS_COLLECTION = "users"
 private const val NOTES_COLLECTION = "notes"
-private const val USER = "user"
-private const val ANONYMOUS = "anonymous"
 
-class FireStoreProvider : RemoteDataProvider {
+class FireStoreProvider(private val storage: Storage,
+                        private val firebaseAuth: FirebaseAuth,
+                        private val db : FirebaseFirestore) : RemoteDataProvider {
 
-    private val db = FirebaseFirestore.getInstance()
     private val currentUser
-        get() = FirebaseAuth.getInstance().currentUser
+        get() = firebaseAuth.currentUser
 
     private val anonymous: String by lazy {
-        toAssign()
-    }
-
-    private fun toAssign(): String{
-        val context = NoteApp.INSTANCE.applicationContext
-        val preferences = context.getSharedPreferences(USER, Context.MODE_PRIVATE)
-        var name = preferences.getString(ANONYMOUS, null)
-        if (name == null){
-            name = UUID.randomUUID().toString()
-            preferences.edit().putString(ANONYMOUS, name).apply()
-        }
-        return name
+        storage.toAssign()
     }
 
     override fun subscribeToAllNotes(): LiveData<NoteResult> {
@@ -109,23 +95,40 @@ class FireStoreProvider : RemoteDataProvider {
         }
     }
 
-    override fun deleteNote(note: Note): LiveData<NoteResult> {
+    override fun removeItem(id: String): LiveData<NoteResult> {
         return MutableLiveData<NoteResult>().apply {
-            note.id?.let { it ->
-                try {
-                    getUserNotesCollection().document(it)
-                            .delete()
-                            .addOnSuccessListener {
-                                value = subscribeToAllNotes().value
+            try {
+                getUserNotesCollection().document(id)
+                        .delete()
+                        .addOnSuccessListener {
+                            value = subscribeToAllNotes().value
+                        }
+                        .addOnFailureListener {
+                            OnFailureListener {
+                                throw it
                             }
-                            .addOnFailureListener {
-                                OnFailureListener {
-                                    throw it
-                                }
+                        }
+            } catch (e: Throwable) {
+                value = NoteResult.Error(e)
+            }
+        }
+    }
+
+    override fun deleteNote(id: String): LiveData<NoteResult> {
+        return MutableLiveData<NoteResult>().apply {
+            try {
+                getUserNotesCollection().document(id)
+                        .delete()
+                        .addOnSuccessListener {
+                            value = null
+                        }
+                        .addOnFailureListener {
+                            OnFailureListener {
+                                throw it
                             }
-                } catch (e: Throwable) {
-                    value = NoteResult.Error(e)
-                }
+                        }
+            } catch (e: Throwable) {
+                value = NoteResult.Error(e)
             }
         }
     }

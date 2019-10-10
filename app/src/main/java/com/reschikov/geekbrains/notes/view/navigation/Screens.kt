@@ -8,10 +8,10 @@ import com.reschikov.geekbrains.notes.KEY_SCREEN_LIST_NOTES
 import com.reschikov.geekbrains.notes.KEY_SCREEN_NOTE
 import com.reschikov.geekbrains.notes.R
 import com.reschikov.geekbrains.notes.RC_SIGN_IN
-import com.reschikov.geekbrains.notes.view.activities.MainActivity
 import com.reschikov.geekbrains.notes.view.activities.SplashActivity
 import com.reschikov.geekbrains.notes.view.fragments.EditorNoteFragment
 import com.reschikov.geekbrains.notes.view.fragments.ListNotesFragment
+import org.jetbrains.anko.intentFor
 import ru.terrakok.cicerone.android.support.SupportAppScreen
 
 sealed class Screens : SupportAppScreen(){
@@ -47,13 +47,7 @@ sealed class Screens : SupportAppScreen(){
         }
     }
 
-    class MainScreen: Screens(){
-        override fun getActivityIntent(context: Context?): Intent {
-            return Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-        }
-    }
+    class MainScreen: Screens()
 
     class LogoutScreen: Screens(){
 
@@ -61,7 +55,7 @@ sealed class Screens : SupportAppScreen(){
             AuthUI.getInstance()
                 .signOut(activity.baseContext)
                 .addOnCompleteListener {
-                    activity.startActivity(Intent(activity.baseContext, SplashActivity::class.java))
+                    activity.startActivity(activity.baseContext.intentFor<SplashActivity>())
                     activity.finish()
                 }
         }

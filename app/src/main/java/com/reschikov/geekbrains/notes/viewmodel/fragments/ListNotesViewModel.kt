@@ -7,7 +7,7 @@ import com.reschikov.geekbrains.notes.repository.model.Note
 import com.reschikov.geekbrains.notes.repository.model.NoteResult
 import com.reschikov.geekbrains.notes.usecase.ListNoteViewState
 
-class ListNotesViewModel(val repository: Repository = Repository): BaseViewModel<MutableList<Note>?, ListNoteViewState>() {
+class ListNotesViewModel(val repository: Repository): BaseViewModel<MutableList<Note>?, ListNoteViewState>() {
 
     private val repositoryNotes: LiveData<NoteResult> = repository.getNotes()
     private val notesObserver = Observer<NoteResult> { noteResult ->
@@ -26,7 +26,7 @@ class ListNotesViewModel(val repository: Repository = Repository): BaseViewModel
     }
 
     fun deleteNote(note: Note){
-        repository.deleteNote(note)
+        note.id?.let { repository.removeItem(it) }
     }
 
     override fun onCleared () {

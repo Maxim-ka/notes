@@ -6,23 +6,24 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.reschikov.geekbrains.notes.*
-import com.reschikov.geekbrains.notes.view.dialogs.LogoutDialog
+import com.reschikov.geekbrains.notes.view.navigation.RouterSupportMessage
 import com.reschikov.geekbrains.notes.view.navigation.Screens
 import kotlinx.android.synthetic.main.activity_main.*
 import ru.terrakok.cicerone.android.support.SupportAppNavigator
 import com.reschikov.geekbrains.notes.view.navigation.SupportMessage
 import com.reschikov.geekbrains.notes.viewmodel.activity.MainViewModel
+import org.jetbrains.anko.alert
+import org.koin.android.ext.android.inject
 import ru.terrakok.cicerone.commands.Command
 import ru.terrakok.cicerone.commands.Replace
 
-private const val TAG_LOGOUT = "tag logout"
-
-class MainActivity : BaseActivity() {
+class MainActivity : BaseActivity(), Expectative {
 
     override val navigator = object : SupportAppNavigator(this, R.id.frame_master){
         override fun applyCommand(command: Command?) {
@@ -46,6 +47,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    private val router: RouterSupportMessage by inject()
     private lateinit var plus : Drawable
     private lateinit var done : Drawable
     private lateinit var fab : FloatingActionButton
@@ -75,7 +77,7 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(bottomAppBar)
-        viewModel.currentScreen ?: NoteApp.INSTANCE.getRouter().replaceScreen(Screens.ListNotesScreen())
+        viewModel.currentScreen ?: router.replaceScreen(Screens.ListNotesScreen())
         initFab()
     }
 
@@ -90,16 +92,16 @@ class MainActivity : BaseActivity() {
     private fun onClick() {
         when (viewModel.currentScreen?.screenKey) {
             KEY_SCREEN_LIST_NOTES -> {
-                NoteApp.INSTANCE.getRouter().replaceScreen(Screens.NoteScreen(null))
+                router.replaceScreen(Screens.NoteScreen(null))
             }
             KEY_SCREEN_NOTE -> {
-                NoteApp.INSTANCE.getRouter().replaceScreen(Screens.ListNotesScreen())
+                router.replaceScreen(Screens.ListNotesScreen())
             }
         }
     }
 
     override fun onCreateOptionsMenu (menu: Menu?): Boolean =
-            MenuInflater( this ).inflate(R.menu.menu, menu).let { true }
+            MenuInflater( this ).inflate(R.menu.menu_main_activity, menu).let { true }
 
     override fun onOptionsItemSelected (item: MenuItem): Boolean =
             when (item.itemId) {
@@ -107,16 +109,38 @@ class MainActivity : BaseActivity() {
                 else -> false
             }
 
-    private fun showLogoutDialog() {
-        supportFragmentManager.findFragmentByTag(TAG_LOGOUT) ?:
-        LogoutDialog().show(supportFragmentManager, TAG_LOGOUT)
+    private fun showLogoutDialog(){
+        alert {
+            titleResource = R.string.logout_dialog_title
+            messageResource = R.string.logout_dialog_message
+            positiveButton(R.string.dialog_ok) {
+                onLogout()
+                it.dismiss()
+            }
+        }.show()
+    }
+
+    private fun onLogout(){
+        router.replaceScreen(Screens.LogoutScreen())
     }
 
     override fun onBackPressed() {
         if (viewModel.currentScreen?.screenKey == KEY_SCREEN_NOTE){
-            NoteApp.INSTANCE.getRouter().replaceScreen(Screens.ListNotesScreen())
+            router.replaceScreen(Screens.ListNotesScreen())
             return
         }
         super.onBackPressed()
+    }
+
+    override fun toBegin() {
+        progress_bar.run {
+            visibility = View.VISIBLE
+        }
+    }
+
+    override fun toFinish() {
+        progress_bar.run {
+            visibility = View.INVISIBLE
+        }
     }
 }

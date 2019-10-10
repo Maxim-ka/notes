@@ -3,22 +3,15 @@ package com.reschikov.geekbrains.notes
 import android.app.Application
 import android.content.Context
 import androidx.multidex.MultiDex
-import com.reschikov.geekbrains.notes.view.navigation.RouterSupportMessage
-import ru.terrakok.cicerone.Router
-import ru.terrakok.cicerone.NavigatorHolder
-import ru.terrakok.cicerone.Cicerone
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import com.reschikov.geekbrains.notes.di.appModule
+import com.reschikov.geekbrains.notes.di.navigatorModule
+import com.reschikov.geekbrains.notes.di.softKeyModule
+import com.reschikov.geekbrains.notes.di.viewModelModule
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
 import timber.log.Timber
 
-
 class NoteApp : Application() {
-
-    companion object{
-        lateinit var INSTANCE: NoteApp
-    }
-
-    private lateinit var cicerone: Cicerone<Router>
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
@@ -28,15 +21,9 @@ class NoteApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Timber.plant(Timber.DebugTree())
-        INSTANCE = this
-        cicerone = Cicerone.create()
-    }
-
-    fun getNavigatorHolder(): NavigatorHolder {
-        return cicerone.navigatorHolder
-    }
-
-    fun getRouter(): RouterSupportMessage {
-        return RouterSupportMessage(cicerone.router)
+        startKoin {
+            androidContext (this@NoteApp)
+            modules(listOf(appModule, navigatorModule, viewModelModule, softKeyModule))
+        }
     }
 }
