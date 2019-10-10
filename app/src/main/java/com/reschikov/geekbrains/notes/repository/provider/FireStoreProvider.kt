@@ -31,7 +31,7 @@ class FireStoreProvider(private val storage: Storage,
                 getUserNotesCollection()
                     .addSnapshotListener { snapshot, e ->
                         e?.let { throw it } ?: snapshot?.let { it ->
-                            value = NoteResult.Success(it.map { it.toObject(Note::class.java) })
+                            value = NoteResult.Success(it.documents.map { it.toObject(Note::class.java) })
                         }
                     }
             } catch (e: Throwable) {
