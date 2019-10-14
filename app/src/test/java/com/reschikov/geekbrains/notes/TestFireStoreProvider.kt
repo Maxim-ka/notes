@@ -3,7 +3,6 @@ package com.reschikov.geekbrains.notes
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
-import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
@@ -18,9 +17,6 @@ import org.junit.Assert.*
 
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
-import org.mockito.ArgumentMatchers.any
-import timber.log.Timber
-import java.lang.RuntimeException
 import com.google.firebase.firestore.FirebaseFirestoreException as FirebaseFirestoreException
 
 class TestFireStoreProvider{
@@ -36,9 +32,9 @@ class TestFireStoreProvider{
     private val mockUserDocument = mockk<DocumentReference>()
     private val mockResultCollection = mockk<CollectionReference>()
 
-    private val mockDocument_1 = mockk<DocumentSnapshot>()
-    private val mockDocument_2 = mockk<DocumentSnapshot>()
-    private val mockDocument_3 = mockk<DocumentSnapshot>()
+    private val mockDocument1 = mockk<DocumentSnapshot>()
+    private val mockDocument2 = mockk<DocumentSnapshot>()
+    private val mockDocument3 = mockk<DocumentSnapshot>()
 
     private val testNotes = listOf(
             Note(id = "1"),
@@ -69,9 +65,9 @@ class TestFireStoreProvider{
         every { mockUserCollection.document(any())} returns mockUserDocument
         every { mockUserDocument.collection(any())} returns mockResultCollection
 
-        every { mockDocument_1.toObject(Note::class.java) } returns testNotes[0]
-        every { mockDocument_2.toObject(Note::class.java) } returns testNotes[1]
-        every { mockDocument_3.toObject(Note::class.java) } returns testNotes[2]
+        every { mockDocument1.toObject(Note::class.java) } returns testNotes[0]
+        every { mockDocument2.toObject(Note::class.java) } returns testNotes[1]
+        every { mockDocument3.toObject(Note::class.java) } returns testNotes[2]
 
 
     }
@@ -92,7 +88,7 @@ class TestFireStoreProvider{
         var result: Any? = null
         val mockQuerySnapshot = mockk<QuerySnapshot>()
         val slot =  slot<EventListener<QuerySnapshot>>()
-        every {mockQuerySnapshot.documents } returns listOf(mockDocument_1, mockDocument_2, mockDocument_3)
+        every {mockQuerySnapshot.documents } returns listOf(mockDocument1, mockDocument2, mockDocument3)
         every { mockResultCollection.addSnapshotListener(capture(slot)) } returns mockk()
         provider.subscribeToAllNotes().observeForever{
             result = (it as? NoteResult.Success<List<Note>>)?.data
@@ -101,11 +97,9 @@ class TestFireStoreProvider{
         assertEquals(testNotes, result)
     }
 
-    //FIXME не прошел
     @Test
     fun `subscribeToAllNotes return error`(){
         var result: Throwable? = null
-//        val spyError = spyk(FirebaseFirestoreException("Provided message must not be null", FirebaseFirestoreException.Code.ABORTED))
         val testError = mockk<FirebaseFirestoreException>()
         val slot = slot<EventListener<QuerySnapshot>>()
         every { mockResultCollection.addSnapshotListener(capture(slot)) } returns mockk()
@@ -129,7 +123,7 @@ class TestFireStoreProvider{
         provider.getNoteById(testNotes[0].id!!).observeForever {
             result = (it as? NoteResult.Success<Note>)?.data
         }
-        slot.captured.onSuccess(mockDocument_1)
+        slot.captured.onSuccess(mockDocument1)
 
         assertNotNull(result)
         assertEquals(testNotes[0], result)
@@ -186,16 +180,19 @@ class TestFireStoreProvider{
     @Test
     fun `successfully delete note`(){
         val slot = slot<OnSuccessListener<Void>>()
+        val slotError = slot<OnFailureListener>()
         var result: Note? = null
         every {
             mockResultCollection
                 .document(testNotes[0].id!!)
                 .delete()
-                .addOnSuccessListener(capture(slot))} returns mockk()
+                .addOnSuccessListener(capture(slot))
+                .addOnFailureListener(capture(slotError))} returns mockk()
         provider.deleteNote(testNotes[0].id!!).observeForever {
-            result = (it as NoteResult.Success<Note>).data
+            result = (it as? NoteResult.Success<Note>)?.data
         }
         slot.captured.onSuccess(null)
+        slotError.clear()
 
         assertNull(result)
         assertEquals(null, result)
@@ -205,29 +202,31 @@ class TestFireStoreProvider{
                 .delete() }
     }
 
-    //FixMe так и не проходит никак
     @Test
     fun `unsuccessfully delete note`(){
-        val slot = slot<OnFailureListener>()
+        val slotError = slot<OnFailureListener>()
+        val slotSuccess = slot<OnSuccessListener<Void>>()
         val mockException = mockk<FirebaseFirestoreException>(relaxed = true)
         var result: Throwable? = null
         every {
             mockResultCollection
                 .document(any())
                 .delete()
-                .addOnFailureListener(capture(slot))} returns mockk()
+                .addOnSuccessListener(capture(slotSuccess))
+                .addOnFailureListener(capture(slotError))} returns mockk()
 
         provider.deleteNote(testNotes[0].id!!).observeForever {
             result = (it as NoteResult.Error).error
         }
-        slot.captured.onFailure(mockException)
+        slotSuccess.clear()
+        slotError.captured.onFailure(mockException)
 
         assertNotNull(result)
         assertEquals(mockException, result)
 
-//        verify(exactly = 1) {  mockResultCollection
-//                .document(any())
-//                .delete() }
+        verify(exactly = 1) {  mockResultCollection
+                .document(any())
+                .delete() }
     }
 
     @After

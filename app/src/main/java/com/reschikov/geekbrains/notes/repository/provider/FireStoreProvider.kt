@@ -2,8 +2,6 @@ package com.reschikov.geekbrains.notes.repository.provider
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
 import com.reschikov.geekbrains.notes.repository.NoAuthException
@@ -31,7 +29,7 @@ class FireStoreProvider(private val storage: Storage,
             try {
                 getUserNotesCollection()
                     .addSnapshotListener { snapshot, e ->
-                        e?.let { throw it } ?: snapshot?.let { it ->
+                        e?.let { value = NoteResult.Error(it) } ?: snapshot?.let { it ->
                             value = NoteResult.Success(it.documents.map { it.toObject(Note::class.java) })
                         }
                     }
@@ -49,7 +47,7 @@ class FireStoreProvider(private val storage: Storage,
                     .addOnSuccessListener { snapshot ->
                         value = NoteResult.Success(snapshot.toObject(Note::class.java))
                     }
-                    .addOnFailureListener { throw it }
+                    .addOnFailureListener { value = NoteResult.Error(it) }
             } catch (e: Throwable) {
                 value = NoteResult.Error(e)
             }
@@ -65,7 +63,7 @@ class FireStoreProvider(private val storage: Storage,
                         value = NoteResult.Success(note)
                     }
                     .addOnFailureListener {
-                        throw it
+                        value = NoteResult.Error(it)
                     }
             } catch (e: Throwable) {
                 value = NoteResult.Error(e)
@@ -83,7 +81,7 @@ class FireStoreProvider(private val storage: Storage,
                             value = NoteResult.Success(note)
                         }
                         .addOnFailureListener {
-                            throw it
+                            value = NoteResult.Error(it)
                         }
                 } catch (e: Throwable) {
                     value = NoteResult.Error(e)
@@ -101,7 +99,7 @@ class FireStoreProvider(private val storage: Storage,
                             value = subscribeToAllNotes().value
                         }
                         .addOnFailureListener {
-                            throw it
+                            value = NoteResult.Error(it)
                         }
             } catch (e: Throwable) {
                 value = NoteResult.Error(e)
