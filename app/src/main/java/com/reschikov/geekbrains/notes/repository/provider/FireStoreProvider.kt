@@ -65,9 +65,7 @@ class FireStoreProvider(private val storage: Storage,
                         value = NoteResult.Success(note)
                     }
                     .addOnFailureListener {
-                        OnFailureListener {
-                            throw it
-                        }
+                        throw it
                     }
             } catch (e: Throwable) {
                 value = NoteResult.Error(e)
@@ -85,9 +83,7 @@ class FireStoreProvider(private val storage: Storage,
                             value = NoteResult.Success(note)
                         }
                         .addOnFailureListener {
-                            OnFailureListener {
-                                throw it
-                            }
+                            throw it
                         }
                 } catch (e: Throwable) {
                     value = NoteResult.Error(e)
@@ -105,9 +101,7 @@ class FireStoreProvider(private val storage: Storage,
                             value = subscribeToAllNotes().value
                         }
                         .addOnFailureListener {
-                            OnFailureListener {
-                                throw it
-                            }
+                            throw it
                         }
             } catch (e: Throwable) {
                 value = NoteResult.Error(e)
@@ -124,9 +118,7 @@ class FireStoreProvider(private val storage: Storage,
                             value = null
                         }
                         .addOnFailureListener {
-                            OnFailureListener {
-                                throw it
-                            }
+                            value = NoteResult.Error(it)
                         }
             } catch (e: Throwable) {
                 value = NoteResult.Error(e)

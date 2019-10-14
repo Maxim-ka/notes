@@ -19,6 +19,7 @@ import ru.terrakok.cicerone.android.support.SupportAppNavigator
 import com.reschikov.geekbrains.notes.view.navigation.SupportMessage
 import com.reschikov.geekbrains.notes.viewmodel.activity.MainViewModel
 import org.jetbrains.anko.alert
+import org.jetbrains.annotations.TestOnly
 import org.koin.android.ext.android.inject
 import ru.terrakok.cicerone.commands.Command
 import ru.terrakok.cicerone.commands.Replace
@@ -52,9 +53,11 @@ class MainActivity : BaseActivity(), Expectative {
     private lateinit var done : Drawable
     private lateinit var fab : FloatingActionButton
 
-    private val viewModel: MainViewModel by lazy {
-        ViewModelProviders.of(this).get(MainViewModel::class.java)
-    }
+    private val viewModel: MainViewModel by inject()
+
+//    private val viewModel: MainViewModel by lazy {
+//        ViewModelProviders.of(this).get(MainViewModel::class.java)
+//    }
 
     private fun showMessage(message: String){
         Snackbar.make(bottomAppBar, message, Snackbar.LENGTH_INDEFINITE)
@@ -67,8 +70,14 @@ class MainActivity : BaseActivity(), Expectative {
     private fun setImageFabForTag() {
         fab.apply {
             when(viewModel.currentScreen?.screenKey){
-                KEY_SCREEN_LIST_NOTES -> setImageDrawable(plus)
-                KEY_SCREEN_NOTE -> setImageDrawable(done)
+                KEY_SCREEN_LIST_NOTES -> {
+                    setImageDrawable(plus)
+                    tag = R.drawable.ic_add_24dp
+                }
+                KEY_SCREEN_NOTE -> {
+                    setImageDrawable(done)
+                    tag = R.drawable.ic_done_white_24dp
+                }
             }
         }
     }

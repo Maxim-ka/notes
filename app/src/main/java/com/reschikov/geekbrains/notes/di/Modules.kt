@@ -10,6 +10,7 @@ import com.reschikov.geekbrains.notes.repository.provider.RemoteDataProvider
 import com.reschikov.geekbrains.notes.view.navigation.RouterSupportMessage
 import com.reschikov.geekbrains.notes.repository.preference.Storage
 import com.reschikov.geekbrains.notes.view.fragments.EditorNoteFragment
+import com.reschikov.geekbrains.notes.viewmodel.activity.MainViewModel
 import com.reschikov.geekbrains.notes.viewmodel.activity.SplashViewModel
 import com.reschikov.geekbrains.notes.viewmodel.fragments.ListNotesViewModel
 import com.reschikov.geekbrains.notes.viewmodel.fragments.NoteViewModel

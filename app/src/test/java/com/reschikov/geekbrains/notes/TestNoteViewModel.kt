@@ -2,16 +2,15 @@ package com.reschikov.geekbrains.notes
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.MutableLiveData
-import com.firebase.ui.auth.AuthUI
 import com.reschikov.geekbrains.notes.repository.NoAuthException
 import com.reschikov.geekbrains.notes.repository.Repository
 import com.reschikov.geekbrains.notes.repository.model.Note
 import com.reschikov.geekbrains.notes.repository.model.NoteResult
 import com.reschikov.geekbrains.notes.view.navigation.RouterSupportMessage
-import com.reschikov.geekbrains.notes.view.navigation.Screens
 import com.reschikov.geekbrains.notes.viewmodel.fragments.NoteViewModel
 import io.mockk.*
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -25,12 +24,13 @@ class TestNoteViewModel {
     val taskExecutorRule =  InstantTaskExecutorRule()
 
     private val mockRepository = mockk<Repository>()
-    private val mockRouterSupportMessage = mockk<RouterSupportMessage>()
+    private val spyRouterSupportMessage = mockk<RouterSupportMessage>()
     private val notesLiveData = MutableLiveData<NoteResult>()
+    private val testId = "Id"
 
-    private val noteViewModel = NoteViewModel(mockRepository, mockRouterSupportMessage)
+    private val noteViewModel = NoteViewModel(mockRepository, spyRouterSupportMessage)
     private val mockModule = module {
-        single { mockRouterSupportMessage }
+        single { spyRouterSupportMessage }
     }
 
     @Before
@@ -61,31 +61,51 @@ class TestNoteViewModel {
         val testError = Throwable("error")
         var result: String? = null
         val slot = slot<String>()
-        every { mockRouterSupportMessage.sendMessage(capture(slot)) } answers  {result = slot.captured}
-        noteViewModel.loadNote("1")
+
+        every { spyRouterSupportMessage.sendMessage(capture(slot)) } answers  {
+            result = slot.captured }
+
+        noteViewModel.loadNote(testId)
         notesLiveData.value = NoteResult.Error(testError)
 
         assertEquals(testError.message, result)
         stopKoin()
     }
 
-    //FixME не прошел
     @Test
     fun `unauthorized to load Note`(){
-        startKoin { modules(mockModule) }
+        startKoin {  }
         val testError = NoAuthException()
         var result: Throwable? = null
-        val mockScreen = mockk<Screens.AuthScreen>(relaxed = true)
-        every { listOf(
-                AuthUI.IdpConfig.EmailBuilder().build(),
-                AuthUI.IdpConfig.GoogleBuilder().build(),
-                AuthUI.IdpConfig.AnonymousBuilder().build()) } returns listOf()
-        every {mockRouterSupportMessage.replaceScreen(mockScreen) } answers {
-            result = NoAuthException()}
-        noteViewModel.loadNote("1")
-        notesLiveData.value = NoteResult.Error(testError)
+        val spyNoteResultError = spyk(NoteResult.Error(testError))
+        val slot = slot<NoAuthException>()
+
+        every { spyNoteResultError.renderError(capture(slot)) } answers {
+            result = slot.captured }
+
+        noteViewModel.loadNote(testId)
+        notesLiveData.value = spyNoteResultError
 
         assertEquals(testError, result)
         stopKoin()
+    }
+
+    @Test
+    fun `successfully delete note`(){
+        val testNote = Note(id = "id")
+        var result: Note? = testNote
+        val spyNoteViewModel = spyk(noteViewModel, recordPrivateCalls = true)
+
+        every { mockRepository.deleteNote(any()) } returns notesLiveData
+        every {spyNoteViewModel["close"]() } answers { Unit.also { result = null }  }
+
+        spyNoteViewModel.saveChanges(testNote)
+        spyNoteViewModel.delete()
+
+        notesLiveData.value = null
+
+        assertNull(result)
+
+        verify(exactly = 1) {  mockRepository.deleteNote(any()) }
     }
 }

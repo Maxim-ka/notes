@@ -7,6 +7,7 @@
         android:id = "@+id/logout"
         android:title = "@string/logout"
         android:icon="@drawable/ic_exit_to_app_24dp"
+        android:orderInCategory="10"
         app:showAsAction="always"/>
 
 </menu>
