@@ -42,7 +42,7 @@ class EditorNoteFragment: BaseFragment<Note?, NoteViewState>(R.layout.note_fragm
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.getString(KEY_ID)?.let {
-            model.loadNote(it) }
+            model.loadNote(it) } ?: expectative.toFinish()
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {

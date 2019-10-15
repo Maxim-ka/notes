@@ -15,22 +15,18 @@ import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.item_note.*
 import org.koin.core.KoinComponent
 import org.koin.core.inject
-import timber.log.Timber
 import kotlin.properties.Delegates
 
 private const val HALF = 0.5f
 
 class ListNotesAdapter(private val onItemClickListener: OnItemClickListener) : RecyclerView.Adapter<ListNotesAdapter.ViewHolder>() {
 
-    //FixMe проблема с работой DiffUtil.Callback
     var notes: MutableList<Note>  by Delegates.observable(mutableListOf()){
         _, oldValue, newValue ->
         run {
             if (oldValue.isEmpty()) {
-                Timber.i("oldValue.isEmpty")
                 notifyDataSetChanged()
             }else{
-                Timber.i("oldValue ${oldValue.size},\n newValue ${newValue.size}")
                 val diffUtilCallback = NotesDiffUtilCallback(oldValue, newValue)
                 DiffUtil.calculateDiff(diffUtilCallback).dispatchUpdatesTo(this)
             }

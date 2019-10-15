@@ -3,14 +3,22 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item android:id = "@+id/delete_forever"
-        android:title="@string/delete"
-        android:icon = "@drawable/ic_delete_forever"
-        app:showAsAction = "ifRoom"/>
+    <group
+        android:orderInCategory="2"
+        android:menuCategory="container">
 
-    <item android:id = "@+id/palette"
-        android:title="@string/note_color_selection"
-        android:icon = "@drawable/ic_palette"
-        app:showAsAction = "ifRoom"/>
+        <item android:id = "@+id/delete_forever"
+            android:title="@string/delete"
+            android:icon = "@drawable/ic_delete_forever"
+            android:orderInCategory="2"
+            app:showAsAction = "ifRoom"/>
+
+        <item android:id = "@+id/palette"
+            android:title="@string/note_color_selection"
+            android:icon = "@drawable/ic_palette"
+            android:orderInCategory="3"
+            app:showAsAction = "ifRoom"/>
+
+    </group>
 
 </menu>

@@ -12,7 +12,7 @@ abstract class BaseFragment<T, S : BaseViewState<T>>(layoutId: Int) : Fragment(l
 
     abstract val model: BaseViewModel<T, S>
 
-    private lateinit var expectative: Expectative
+    protected lateinit var expectative: Expectative
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
