@@ -2,25 +2,24 @@ package com.reschikov.geekbrains.notes.viewmodel.fragments
 
 import com.reschikov.geekbrains.notes.repository.Repository
 import com.reschikov.geekbrains.notes.repository.model.Note
-import com.reschikov.geekbrains.notes.repository.model.NoteResult
-import com.reschikov.geekbrains.notes.usecase.NoteViewState
 import com.reschikov.geekbrains.notes.view.navigation.RouterSupportMessage
 import com.reschikov.geekbrains.notes.view.navigation.Screens
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 
 class NoteViewModel(private val repository: Repository, private val router:RouterSupportMessage) :
-    BaseViewModel<Note?, NoteViewState>(){
+    BaseViewModel<Note?>(){
 
     private var pendingNote: Note? = null
 
+    @ExperimentalCoroutinesApi
     fun loadNote (noteId: String) {
-        repository.getNoteById(noteId).observeForever { noteResult ->
-            noteResult?.let {
-                when(it){
-                    is NoteResult.Success<*> ->
-                        viewStateLiveData.value = NoteViewState(note = it.data as? Note)
-                    is NoteResult.Error ->
-                        it.renderError(it.error)
-                }
+        launch {
+            try {
+                pendingNote = repository.getNoteById(noteId)
+                setData(pendingNote)
+            }catch (e: Throwable){
+                setError(e)
             }
         }
     }
@@ -30,15 +29,17 @@ class NoteViewModel(private val repository: Repository, private val router:Route
     }
 
     fun delete(){
-        pendingNote?.let {
-            if (it.id != null) {
-                repository.deleteNote(it.id).observeForever{result ->
-                    when(result){
-                        is NoteResult.Error -> result.renderError(result.error)
-                        else -> close()
+        pendingNote?.let {note ->
+            note.id?.let {
+                launch {
+                    try {
+                        repository.deleteNote(it)
+                    } catch (e: Throwable){
+                        setError(e)
                     }
                 }
-            } else close()
+            }
+            close()
         }
     }
 
@@ -47,11 +48,20 @@ class NoteViewModel(private val repository: Repository, private val router:Route
         router.replaceScreen(Screens.ListNotesScreen())
     }
 
+    @ExperimentalCoroutinesApi
     override fun onCleared () {
         pendingNote?.let {
             with(repository){
-                it.id?.run {saveNote(it) } ?:
-                it.takeUnless {it.title == null && it.note == null }?.let {addNewNote(it)}
+                launch {
+                    try {
+                        it.id?.run {
+                            saveNote(it)
+                        } ?:
+                        it.takeUnless {it.title == null && it.note == null }?.let {addNewNote(it)}
+                    }catch (e: Throwable){
+                        setError(e)
+                    }
+                }
             }
         }
     }

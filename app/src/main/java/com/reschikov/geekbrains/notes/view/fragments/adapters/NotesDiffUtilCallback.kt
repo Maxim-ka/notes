@@ -3,7 +3,7 @@ package com.reschikov.geekbrains.notes.view.fragments.adapters
 import androidx.recyclerview.widget.DiffUtil
 import com.reschikov.geekbrains.notes.repository.model.Note
 
-class NotesDiffUtilCallback(private val oldList: MutableList<Note>, private val newList: MutableList<Note>) : DiffUtil.Callback() {
+class NotesDiffUtilCallback(private val oldList: List<Note>, private val newList: List<Note>) : DiffUtil.Callback() {
 
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
         return oldList[oldItemPosition].id == newList[newItemPosition].id
