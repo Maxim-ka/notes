@@ -5,12 +5,9 @@ import com.reschikov.geekbrains.notes.repository.model.Note
 import com.reschikov.geekbrains.notes.repository.model.NoteResult
 import com.reschikov.geekbrains.notes.viewmodel.fragments.ListNotesViewModel
 import io.mockk.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -23,7 +20,6 @@ class TestListNotesViewModel {
     @ExperimentalCoroutinesApi
     private  val testDispatcher =  TestCoroutineDispatcher()
     private val mockRepository = mockk<Repository>()
-    private val mockChannel = mockk<Channel<NoteResult>>()
     @ExperimentalCoroutinesApi
     private lateinit var listNotesViewModel: ListNotesViewModel
 
@@ -31,8 +27,6 @@ class TestListNotesViewModel {
     @Before
     fun setUp () {
         Dispatchers.setMain(testDispatcher)
-        every { mockRepository.getNotes() } answers {mockChannel}
-        listNotesViewModel = spyk(ListNotesViewModel(mockRepository), recordPrivateCalls = true)
     }
 
     @ExperimentalCoroutinesApi
@@ -41,18 +35,23 @@ class TestListNotesViewModel {
         val testError = Throwable("error")
         var result: Throwable? = null
 
-        every { mockChannel.offer(NoteResult.Error(testError)) } returns true
-        every { listNotesViewModel getProperty "channelNoteResult" } propertyType ReceiveChannel::class answers {mockChannel}
+        every { mockRepository.getNotes() } returns  MainScope().produceChannel(NoteResult.Error(testError))
+        listNotesViewModel = ListNotesViewModel(mockRepository)
+
+        mockkObject(listNotesViewModel)
 
         MainScope().launch {
             result = listNotesViewModel.getErrorChannel().receive()
         }
 
         assertNotNull(result)
-        assertEquals(Throwable("error"), result)
         assertEquals(testError, result)
         assertEquals(testError.message, result?.message)
+    }
 
+    @ExperimentalCoroutinesApi
+    fun CoroutineScope.produceChannel(result: NoteResult): ReceiveChannel<NoteResult> = produce {
+        send(result)
     }
 
     @ExperimentalCoroutinesApi
@@ -61,16 +60,18 @@ class TestListNotesViewModel {
         var result: List<Note>? = null
         val testData = listOf(Note(id = "1"), Note(id = "2"), Note(id = "3"))
 
-//        scopeTest.launch {
-//            listNotesViewModel.getViewState().consumeEach {
-//                result = it
-//            }
-//            assertNotNull(testData)
-//            assertNotNull(result)
-//            assertEquals(testData, result)
-//            assertEquals(arrayOf(listOf(Note(id = "1"), Note(id = "2"), Note(id = "3"))), result)
-//        }
-//        scopeTest.advanceUntilIdle()
+        every { mockRepository.getNotes() } returns  MainScope().produceChannel(NoteResult.Success(testData))
+        listNotesViewModel = ListNotesViewModel(mockRepository)
+
+        mockkObject(listNotesViewModel)
+
+        MainScope().launch {
+            result = listNotesViewModel.getViewState().receive()
+        }
+
+        assertNotNull(testData)
+        assertNotNull(result)
+        assertEquals(testData, result)
     }
 
     @ExperimentalCoroutinesApi
