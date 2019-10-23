@@ -1,6 +1,5 @@
 package com.reschikov.geekbrains.notes
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
@@ -12,17 +11,22 @@ import com.reschikov.geekbrains.notes.repository.model.NoteResult
 import com.reschikov.geekbrains.notes.repository.preference.Storage
 import com.reschikov.geekbrains.notes.repository.provider.FireStoreProvider
 import io.mockk.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import org.junit.*
 import org.junit.Assert.*
 
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
-import com.google.firebase.firestore.FirebaseFirestoreException as FirebaseFirestoreException
+import com.google.firebase.firestore.FirebaseFirestoreException
 
-class TestFireStoreProvider{
+class TestFireStoreProvider {
 
-    @get:Rule
-    val taskExecutorRule =  InstantTaskExecutorRule()
+    @ExperimentalCoroutinesApi
+    private  val testDispatcher =  TestCoroutineDispatcher()
 
     private val mockStorage = mockk<Storage>()
     private val mockAuth = mockk<FirebaseAuth>()
@@ -35,6 +39,9 @@ class TestFireStoreProvider{
     private val mockDocument1 = mockk<DocumentSnapshot>()
     private val mockDocument2 = mockk<DocumentSnapshot>()
     private val mockDocument3 = mockk<DocumentSnapshot>()
+
+    private lateinit var slotSuccessVoid: CapturingSlot<OnSuccessListener<Void>>
+    private lateinit var slotError: CapturingSlot<OnFailureListener>
 
     private val testNotes = listOf(
             Note(id = "1"),
@@ -54,10 +61,14 @@ class TestFireStoreProvider{
         fun toFinish(){
             stopKoin()
         }
+
+
     }
 
+    @ExperimentalCoroutinesApi
     @Before
     fun setup(){
+        Dispatchers.setMain(testDispatcher)
         every { mockAuth.currentUser} returns mockCurrentUser
         every { mockCurrentUser.isAnonymous } returns false
         every { mockCurrentUser.uid } returns ""
@@ -69,34 +80,48 @@ class TestFireStoreProvider{
         every { mockDocument2.toObject(Note::class.java) } returns testNotes[1]
         every { mockDocument3.toObject(Note::class.java) } returns testNotes[2]
 
-
+       slotSuccessVoid = slot()
+       slotError = slot()
     }
 
+    @ExperimentalCoroutinesApi
     @Test
     fun `should throw NoAuthException if no authorization`(){
         var result: Any? = null
         every { mockAuth.currentUser } returns null
-        provider.subscribeToAllNotes().observeForever{
-            result = (it as? NoteResult.Error)?.error
 
-        }
+        MainScope().launch {
+                provider.subscribeToAllNotes().consumeEach {
+                    if(it is NoteResult.Error){
+                        result = it.error
+                    }
+                }
+            }
         assertTrue(result is NoAuthException)
     }
 
+    @ExperimentalCoroutinesApi
     @Test
     fun `subscribeToAllNotes return notes`(){
         var result: Any? = null
         val mockQuerySnapshot = mockk<QuerySnapshot>()
         val slot =  slot<EventListener<QuerySnapshot>>()
+
         every {mockQuerySnapshot.documents } returns listOf(mockDocument1, mockDocument2, mockDocument3)
         every { mockResultCollection.addSnapshotListener(capture(slot)) } returns mockk()
-        provider.subscribeToAllNotes().observeForever{
-            result = (it as? NoteResult.Success<List<Note>>)?.data
+
+        MainScope().launch {
+            provider.subscribeToAllNotes().consumeEach {
+                result = (it as NoteResult.Success).data
+            }
         }
+
         slot.captured.onEvent(mockQuerySnapshot, null)
+
         assertEquals(testNotes, result)
     }
 
+    @ExperimentalCoroutinesApi
     @Test
     fun `subscribeToAllNotes return error`(){
         var result: Throwable? = null
@@ -104,9 +129,12 @@ class TestFireStoreProvider{
         val slot = slot<EventListener<QuerySnapshot>>()
         every { mockResultCollection.addSnapshotListener(capture(slot)) } returns mockk()
 
-        provider.subscribeToAllNotes().observeForever{
-            result = (it as NoteResult.Error).error
+        MainScope().launch {
+            provider.subscribeToAllNotes().consumeEach {
+                result = (it as NoteResult.Error).error
+            }
         }
+
         slot.captured.onEvent(null, testError)
         assertEquals(testError, result)
     }
@@ -115,110 +143,127 @@ class TestFireStoreProvider{
     fun `successfully get note by id`(){
         val slot = slot<OnSuccessListener<DocumentSnapshot>>()
         var result: Note? = null
+        val id = "1"
+
         every {
             mockResultCollection
-                .document(testNotes[0].id!!)
+                .document(any())
                 .get()
-                .addOnSuccessListener(capture(slot))} returns mockk()
-        provider.getNoteById(testNotes[0].id!!).observeForever {
-            result = (it as? NoteResult.Success<Note>)?.data
+                .addOnSuccessListener(capture(slot))
+                .addOnFailureListener(capture(slotError))} returns mockk()
+
+        MainScope().launch {
+           result = provider.getNoteById(id)
         }
+
         slot.captured.onSuccess(mockDocument1)
+        slotError.clear()
 
         assertNotNull(result)
         assertEquals(testNotes[0], result)
 
         verify(exactly = 1) { mockResultCollection
-                .document(testNotes[0].id!!)
+                .document(any())
                 .get() }
-
     }
 
     @Test
     fun `successfully add a new note`(){
         val slot = slot<OnSuccessListener<DocumentReference>>()
-        var result: Note? = null
+        var result: Any? = null
+
         every {
             mockResultCollection
-                .add(testNotes[1])
-                .addOnSuccessListener(capture(slot))} returns mockk()
-        provider.addNewNotes(testNotes[1]).observeForever {
-            result = (it as? NoteResult.Success<Note>)?.data
+                .add(any())
+                .addOnSuccessListener(capture(slot))
+                .addOnFailureListener(capture(slotError))} returns mockk()
+
+        MainScope().launch {
+            result = provider.addNewNotes(testNotes[1])
         }
+
         slot.captured.onSuccess(mockUserDocument)
+        slotError.clear()
 
         assertNotNull(result)
-        assertEquals(testNotes[1], result)
+        assertEquals(Unit, result)
 
-        verify(exactly = 1) { mockResultCollection
-                .add(testNotes[1])}
-
+        verify(exactly = 1) { mockResultCollection.add(any())}
     }
 
     @Test
     fun `successfully save note changes`(){
-        val slot = slot<OnSuccessListener<Void>>()
-        var result: Note? = null
+        var result: Any? = null
+
         every {
             mockResultCollection
-                .document(testNotes[0].id!!)
-                .set(testNotes[0])
-                .addOnSuccessListener(capture(slot))} returns mockk()
-        provider.saveChangesNote(testNotes[0]).observeForever {
-            result = (it as? NoteResult.Success<Note>)?.data
+                .document(any())
+                .set(any())
+                .addOnSuccessListener(capture(slotSuccessVoid))
+                .addOnFailureListener(capture(slotError))} returns mockk()
+
+        MainScope().launch {
+            result = provider.saveChangesNote(testNotes[0])
         }
-        slot.captured.onSuccess(null)
+
+        slotSuccessVoid.captured.onSuccess(null)
+        slotError.captured
 
         assertNotNull(result)
-        assertEquals(testNotes[0], result)
+        assertEquals(Unit, result)
 
         verify(exactly = 1) {  mockResultCollection
-                .document(testNotes[0].id!!)
-                .set(testNotes[0]) }
+                .document(any())
+                .set(any()) }
     }
 
     @Test
     fun `successfully delete note`(){
-        val slot = slot<OnSuccessListener<Void>>()
-        val slotError = slot<OnFailureListener>()
-        var result: Note? = null
+        var result: Any? = null
+
         every {
             mockResultCollection
-                .document(testNotes[0].id!!)
+                .document(any())
                 .delete()
-                .addOnSuccessListener(capture(slot))
+                .addOnSuccessListener(capture(slotSuccessVoid))
                 .addOnFailureListener(capture(slotError))} returns mockk()
-        provider.deleteNote(testNotes[0].id!!).observeForever {
-            result = (it as? NoteResult.Success<Note>)?.data
-        }
-        slot.captured.onSuccess(null)
-        slotError.clear()
 
-        assertNull(result)
-        assertEquals(null, result)
+        MainScope().launch {
+            result = provider.deleteNote(testNotes[0].id!!)
+        }
+
+        slotSuccessVoid.captured.onSuccess(null)
+        slotError.captured
+
+        assertNotNull(result)
+        assertEquals(Unit, result)
 
         verify(exactly = 1) {  mockResultCollection
-                .document(testNotes[0].id!!)
+                .document(any())
                 .delete() }
     }
 
     @Test
     fun `unsuccessfully delete note`(){
-        val slotError = slot<OnFailureListener>()
-        val slotSuccess = slot<OnSuccessListener<Void>>()
         val mockException = mockk<FirebaseFirestoreException>(relaxed = true)
         var result: Throwable? = null
+
         every {
             mockResultCollection
                 .document(any())
                 .delete()
-                .addOnSuccessListener(capture(slotSuccess))
+                .addOnSuccessListener(capture(slotSuccessVoid))
                 .addOnFailureListener(capture(slotError))} returns mockk()
 
-        provider.deleteNote(testNotes[0].id!!).observeForever {
-            result = (it as NoteResult.Error).error
+        MainScope().launch {
+            try {
+                provider.deleteNote(testNotes[0].id!!)
+            } catch (e: Throwable){
+                result = e
+            }
         }
-        slotSuccess.clear()
+
+        slotSuccessVoid.captured
         slotError.captured.onFailure(mockException)
 
         assertNotNull(result)
@@ -229,9 +274,12 @@ class TestFireStoreProvider{
                 .delete() }
     }
 
+    @ExperimentalCoroutinesApi
     @After
     fun toFinis(){
         clearAllMocks()
         unmockkAll()
+        Dispatchers.resetMain()
+        testDispatcher.cleanupTestCoroutines ()
     }
 }

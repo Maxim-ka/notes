@@ -11,9 +11,9 @@ import com.reschikov.geekbrains.notes.R
 import com.reschikov.geekbrains.notes.getColor
 import com.reschikov.geekbrains.notes.repository.model.ColorNote
 import com.reschikov.geekbrains.notes.repository.model.Note
-import com.reschikov.geekbrains.notes.usecase.NoteViewState
 import com.reschikov.geekbrains.notes.viewmodel.fragments.NoteViewModel
 import kotlinx.android.synthetic.main.note_fragment.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.jetbrains.anko.alert
 import org.koin.androidx.scope.currentScope
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -22,7 +22,7 @@ import java.util.*
 private const val KEY_ID = "key id"
 private const val SAVE_DELAY = 2_000L
 
-class EditorNoteFragment: BaseFragment<Note?, NoteViewState>(R.layout.note_fragment) {
+class EditorNoteFragment : BaseFragment<Note?>(R.layout.note_fragment) {
 
     companion object{
         fun newInstance(id: String?) = EditorNoteFragment()
@@ -39,6 +39,7 @@ class EditorNoteFragment: BaseFragment<Note?, NoteViewState>(R.layout.note_fragm
     private var note: Note? = null
     private val imm: InputMethodManager by currentScope.inject()
 
+    @ExperimentalCoroutinesApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.getString(KEY_ID)?.let {
@@ -155,6 +156,7 @@ class EditorNoteFragment: BaseFragment<Note?, NoteViewState>(R.layout.note_fragm
         }?.show()
     }
 
+    @ExperimentalCoroutinesApi
     override fun onStart() {
         super.onStart()
         if (tie_title.isFocused || tie_text.isFocused) {

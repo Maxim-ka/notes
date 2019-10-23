@@ -21,7 +21,7 @@ private const val HALF = 0.5f
 
 class ListNotesAdapter(private val onItemClickListener: OnItemClickListener) : RecyclerView.Adapter<ListNotesAdapter.ViewHolder>() {
 
-    var notes: MutableList<Note>  by Delegates.observable(mutableListOf()){
+    var notes: List<Note>  by Delegates.observable(listOf()){
         _, oldValue, newValue ->
         run {
             if (oldValue.isEmpty()) {
